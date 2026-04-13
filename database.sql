@@ -11,6 +11,7 @@ CREATE TABLE events (
     description TEXT,
     venue VARCHAR(150) NOT NULL,
     event_date DATE NOT NULL,
+    capacity INT NOT NULL DEFAULT 100 CHECK (capacity > 0),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -19,6 +20,7 @@ CREATE TABLE participants (
     full_name VARCHAR(120) NOT NULL,
     email VARCHAR(120) NOT NULL UNIQUE,
     phone VARCHAR(30),
+    status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -38,11 +40,15 @@ CREATE TABLE registrations (
     CONSTRAINT uq_event_participant UNIQUE (event_id, participant_id)
 );
 
+CREATE INDEX idx_events_event_date ON events (event_date);
+CREATE INDEX idx_registrations_event_id ON registrations (event_id);
+CREATE INDEX idx_registrations_participant_id ON registrations (participant_id);
+
 -- Optional starter data
-INSERT INTO events (title, description, venue, event_date)
+INSERT INTO events (title, description, venue, event_date, capacity)
 VALUES
-('Tech Summit 2026', 'Technology conference and workshop sessions.', 'CCC Main Hall', '2026-05-20'),
-('Career Expo 2026', 'Career and internship networking event.', 'CCC Gymnasium', '2026-06-15');
+('Tech Summit 2026', 'Technology conference and workshop sessions.', 'CCC Main Hall', '2026-05-20', 250),
+('Career Expo 2026', 'Career and internship networking event.', 'CCC Gymnasium', '2026-06-15', 300);
 
 INSERT INTO participants (full_name, email, phone)
 VALUES

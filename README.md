@@ -103,6 +103,28 @@ Sample body (`POST`):
    - Relationship endpoints return joined records
    - Analytics endpoints return aggregate results
 
+## Quick Postman Test Sequence
+
+1. `POST /api/events` to create at least one new event.
+2. `POST /api/participants` to create at least one participant.
+3. `POST /api/registrations` to attach participant to event.
+4. Check relationship endpoints:
+   - `GET /api/events/{id}/participants`
+   - `GET /api/participants/{id}/events`
+5. Check analytics endpoints:
+   - `GET /api/analytics/participants-per-event`
+   - `GET /api/analytics/most-popular-event`
+   - `GET /api/analytics/total-registrations`
+   - `GET /api/analytics/registrations-trend`
+
+## Submission Checklist
+
+- `database.sql` present with PK and FK relationships
+- Minimum 6 endpoints implemented (CRUD + relationship + analytics)
+- Branches created per member role
+- Each member name/email appears in commit history
+- README includes setup and endpoint usage instructions
+
 ## Member Roles and Responsibilities
 
 - Database Designer: `Jwelynie123` (`dgperez@ccc.edu.ph`)

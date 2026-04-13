@@ -44,6 +44,12 @@ function requireFields(array $payload, array $fields): void
     }
 }
 
+function validateDate(string $date): bool
+{
+    $parsed = DateTime::createFromFormat('Y-m-d', $date);
+    return $parsed && $parsed->format('Y-m-d') === $date;
+}
+
 try {
     $database = new Database();
     $db = $database->getConnection();
@@ -70,6 +76,9 @@ try {
         if (count($segments) === 1 && $method === 'POST') {
             $body = requestBody();
             requireFields($body, ['title', 'venue', 'event_date']);
+            if (!validateDate((string) $body['event_date'])) {
+                jsonResponse(422, ['message' => 'event_date must use YYYY-MM-DD format.']);
+            }
             jsonResponse(201, $eventModel->create($body));
         }
         if (count($segments) === 2 && ctype_digit($segments[1])) {
@@ -84,6 +93,9 @@ try {
             if ($method === 'PUT') {
                 $body = requestBody();
                 requireFields($body, ['title', 'venue', 'event_date']);
+                if (!validateDate((string) $body['event_date'])) {
+                    jsonResponse(422, ['message' => 'event_date must use YYYY-MM-DD format.']);
+                }
                 $updated = $eventModel->update($eventId, $body);
                 if (!$updated) {
                     jsonResponse(404, ['message' => 'Event not found.']);
@@ -116,6 +128,9 @@ try {
         if (count($segments) === 1 && $method === 'POST') {
             $body = requestBody();
             requireFields($body, ['full_name', 'email']);
+            if (!filter_var((string) $body['email'], FILTER_VALIDATE_EMAIL)) {
+                jsonResponse(422, ['message' => 'Invalid participant email format.']);
+            }
             jsonResponse(201, $participantModel->create($body));
         }
         if (count($segments) === 2 && ctype_digit($segments[1])) {
@@ -130,6 +145,9 @@ try {
             if ($method === 'PUT') {
                 $body = requestBody();
                 requireFields($body, ['full_name', 'email']);
+                if (!filter_var((string) $body['email'], FILTER_VALIDATE_EMAIL)) {
+                    jsonResponse(422, ['message' => 'Invalid participant email format.']);
+                }
                 $updated = $participantModel->update($participantId, $body);
                 if (!$updated) {
                     jsonResponse(404, ['message' => 'Participant not found.']);

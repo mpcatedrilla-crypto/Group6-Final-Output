@@ -72,4 +72,15 @@ class Registration
         $row = $stmt->fetch();
         return (int) $row['total'];
     }
+
+    public function registrationTrendByDate(): array
+    {
+        $stmt = $this->db->query(
+            'SELECT DATE(registered_at) AS registration_date, COUNT(*) AS registrations_count
+             FROM registrations
+             GROUP BY DATE(registered_at)
+             ORDER BY registration_date ASC'
+        );
+        return $stmt->fetchAll();
+    }
 }

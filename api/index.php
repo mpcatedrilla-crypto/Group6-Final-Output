@@ -192,6 +192,13 @@ try {
         if (count($segments) === 2 && $segments[1] === 'total-registrations' && $method === 'GET') {
             jsonResponse(200, ['total_registrations' => $registrationModel->totalRegistrations()]);
         }
+        if (count($segments) === 2 && $segments[1] === 'registrations-trend' && $method === 'GET') {
+            $trend = $registrationModel->registrationTrendByDate();
+            jsonResponse(200, [
+                'days_counted' => count($trend),
+                'data' => $trend,
+            ]);
+        }
     }
 
     jsonResponse(404, ['message' => 'Endpoint not found.']);

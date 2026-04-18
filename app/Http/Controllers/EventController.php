@@ -4,19 +4,27 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use Illuminate\Http\Request;
+use App\Http\Controllers\AuthController;
 
 class EventController extends Controller
 {
     /**
      * Display a listing of all events
      */
-    public function index()
+    public function index(Request $request)
     {
-        $events = Event::withCount('participants')
-                       ->orderBy('event_date', 'desc')
-                       ->get();
+        // Validate Basic Authentication
+        $user = AuthController::validateBasicAuth($request);
+        if (!$user) {
+            return AuthController::unauthorizedResponse();
+        }
         
-        return response()->json($events);
+        try {
+            $events = Event::orderBy('event_date', 'desc')->get();
+            return response()->json($events);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -24,6 +32,12 @@ class EventController extends Controller
      */
     public function store(Request $request)
     {
+        // Validate Basic Authentication
+        $user = AuthController::validateBasicAuth($request);
+        if (!$user) {
+            return AuthController::unauthorizedResponse();
+        }
+        
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -41,8 +55,14 @@ class EventController extends Controller
     /**
      * Display a single event
      */
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
+        // Validate Basic Authentication
+        $user = AuthController::validateBasicAuth($request);
+        if (!$user) {
+            return AuthController::unauthorizedResponse();
+        }
+        
         $event = Event::with('participants')->find($id);
 
         if (!$event) {
@@ -57,6 +77,12 @@ class EventController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        // Validate Basic Authentication
+        $user = AuthController::validateBasicAuth($request);
+        if (!$user) {
+            return AuthController::unauthorizedResponse();
+        }
+        
         $event = Event::find($id);
 
         if (!$event) {
@@ -80,8 +106,14 @@ class EventController extends Controller
     /**
      * Remove the specified event
      */
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
+        // Validate Basic Authentication
+        $user = AuthController::validateBasicAuth($request);
+        if (!$user) {
+            return AuthController::unauthorizedResponse();
+        }
+        
         $event = Event::find($id);
 
         if (!$event) {

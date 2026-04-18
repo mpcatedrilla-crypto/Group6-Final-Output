@@ -36,6 +36,7 @@ return [
         Illuminate\View\ViewServiceProvider::class,
         Laravel\Sanctum\SanctumServiceProvider::class,
         App\Providers\AppServiceProvider::class,
+        App\Providers\RouteServiceProvider::class,
     ],
     'aliases' => [
         'App' => Illuminate\Support\Facades\App::class,

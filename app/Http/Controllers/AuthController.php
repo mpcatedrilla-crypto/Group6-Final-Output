@@ -9,65 +9,69 @@ use Illuminate\Support\Facades\Hash;
 class AuthController extends Controller
 {
     /**
-     * Handle Login and Token Generation
+     * Validate HTTP Basic Authentication credentials
+     * Returns user if valid, null if invalid
      */
-    public function login(Request $request)
+    public static function validateBasicAuth(Request $request): ?User
     {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required'
-        ]);
-
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+        $authHeader = $request->header('Authorization');
+        
+        if (!$authHeader || !str_starts_with($authHeader, 'Basic ')) {
+            return null;
         }
-
-        // Create the token
-        $token = $user->createToken('event-api-token')->plainTextToken;
-
-        return response()->json([
-            'user' => $user,
-            'token' => $token
-        ], 200);
+        
+        // Decode base64 credentials (format: username:password)
+        $base64Credentials = substr($authHeader, 6);
+        $credentials = base64_decode($base64Credentials);
+        
+        if (!$credentials || !str_contains($credentials, ':')) {
+            return null;
+        }
+        
+        list($email, $password) = explode(':', $credentials, 2);
+        
+        // Validate credentials
+        $user = User::where('email', $email)->first();
+        
+        if (!$user || !Hash::check($password, $user->password)) {
+            return null;
+        }
+        
+        return $user;
     }
-
+    
     /**
-     * Handle Logout and Token Revocation
+     * Send 401 Unauthorized response with Basic Auth challenge
      */
-    public function logout(Request $request)
+    public static function unauthorizedResponse()
     {
-        $request->user()->currentAccessToken()->delete();
-
         return response()->json([
-            'message' => 'Successfully logged out and token deleted'
-        ], 200);
+            'message' => 'Unauthorized - Basic Authentication required',
+            'format' => 'Authorization: Basic base64(email:password)'
+        ], 401, [
+            'WWW-Authenticate' => 'Basic realm="Events API"'
+        ]);
     }
-
+    
     /**
-     * Register a new user (optional convenience method)
+     * Test endpoint to verify Basic Auth is working
      */
-    public function register(Request $request)
+    public function test(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8'
-        ]);
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password)
-        ]);
-
-        $token = $user->createToken('event-api-token')->plainTextToken;
-
+        $user = self::validateBasicAuth($request);
+        
+        if (!$user) {
+            return self::unauthorizedResponse();
+        }
+        
         return response()->json([
-            'user' => $user,
-            'token' => $token,
-            'message' => 'User registered successfully'
-        ], 201);
+            'message' => 'Basic Authentication successful',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email
+            ],
+            'auth_method' => 'HTTP Basic Authentication'
+        ]);
     }
 }

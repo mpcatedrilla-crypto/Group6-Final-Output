@@ -6,14 +6,21 @@ use App\Models\Participant;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use App\Http\Controllers\AuthController;
 
 class ParticipantController extends Controller
 {
     /**
      * Display a listing of all participants
      */
-    public function index()
+    public function index(Request $request)
     {
+        // Validate Basic Authentication
+        $user = AuthController::validateBasicAuth($request);
+        if (!$user) {
+            return AuthController::unauthorizedResponse();
+        }
+        
         $participants = Participant::with('event')
                                    ->orderBy('id', 'desc')
                                    ->get();
@@ -26,6 +33,12 @@ class ParticipantController extends Controller
      */
     public function store(Request $request)
     {
+        // Validate Basic Authentication
+        $user = AuthController::validateBasicAuth($request);
+        if (!$user) {
+            return AuthController::unauthorizedResponse();
+        }
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:participants,email',
@@ -56,8 +69,14 @@ class ParticipantController extends Controller
     /**
      * Display a single participant
      */
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
+        // Validate Basic Authentication
+        $user = AuthController::validateBasicAuth($request);
+        if (!$user) {
+            return AuthController::unauthorizedResponse();
+        }
+        
         $participant = Participant::with('event')->find($id);
 
         if (!$participant) {
@@ -70,8 +89,14 @@ class ParticipantController extends Controller
     /**
      * Get participants by event
      */
-    public function byEvent(string $event_id)
+    public function byEvent(Request $request, string $event_id)
     {
+        // Validate Basic Authentication
+        $user = AuthController::validateBasicAuth($request);
+        if (!$user) {
+            return AuthController::unauthorizedResponse();
+        }
+        
         $event = Event::find($event_id);
 
         if (!$event) {
@@ -93,6 +118,12 @@ class ParticipantController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        // Validate Basic Authentication
+        $user = AuthController::validateBasicAuth($request);
+        if (!$user) {
+            return AuthController::unauthorizedResponse();
+        }
+        
         $participant = Participant::find($id);
 
         if (!$participant) {
@@ -123,8 +154,14 @@ class ParticipantController extends Controller
     /**
      * Remove the specified participant
      */
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
+        // Validate Basic Authentication
+        $user = AuthController::validateBasicAuth($request);
+        if (!$user) {
+            return AuthController::unauthorizedResponse();
+        }
+        
         $participant = Participant::find($id);
 
         if (!$participant) {

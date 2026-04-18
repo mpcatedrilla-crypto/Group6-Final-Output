@@ -131,9 +131,84 @@ curl -X POST http://localhost:8000/api/logout \
 - **Email:** admin@example.com
 - **Password:** password123
 
+## Authentication Method: Laravel Sanctum
+
+### What is Laravel Sanctum?
+
+Laravel Sanctum provides a featherweight authentication system for SPAs (Single Page Applications), mobile applications, and simple token-based APIs. It allows each user of your application to generate multiple API tokens for their account.
+
+### Authentication Flow (Step-by-Step)
+
+```
+┌─────────┐     Login Request      ┌─────────┐
+│  Client │ ─────────────────────> │   API   │
+│         │  (email + password)     │         │
+│         │                        │         │
+│         │ <───────────────────── │         │
+│         │   Bearer Token         │         │
+└─────────┘                        └─────────┘
+       │                                  │
+       │   Request Protected Resource   │
+       │ ─────────────────────────────> │
+       │   (Authorization: Bearer TOKEN)│
+       │                                  │
+       │ <─────────────────────────────   │
+       │        Protected Data            │
+       │                                  │
+       │   Logout Request               │
+       │ ─────────────────────────────> │
+       │   (Token Revoked)              │
+```
+
+**Step 1: Login**
+- Client sends POST request to `/api/login` with credentials
+- Server validates credentials using Laravel's Auth system
+- Server generates a unique personal access token via Sanctum
+- Server returns token to client
+
+**Step 2: Token Handling**
+- Client stores token (localStorage, session, or memory)
+- Client includes token in `Authorization: Bearer {token}` header for subsequent requests
+- Sanctum middleware validates token on protected routes
+
+**Step 3: Protected Routes**
+- Routes use `auth:sanctum` middleware
+- Sanctum decodes token and authenticates the user
+- Request proceeds with authenticated user context
+- User can access their data via `$request->user()`
+
+**Step 4: Logout**
+- Client sends POST to `/api/logout` with token
+- Server deletes the token from `personal_access_tokens` table
+- Client removes token from storage
+- User is fully logged out
+
+### Advantages of Sanctum
+
+**Strengths:**
+1. **Simple & Lightweight** - No complex OAuth2 setup required
+2. **Multiple Tokens per User** - Users can have tokens for different devices/apps
+3. **Token Expiration** - Tokens can have expiration dates for security
+4. **SPA & Mobile Ready** - Works seamlessly with JavaScript frontends and mobile apps
+5. **Laravel Native** - Built by Laravel team, perfect integration with Eloquent and Auth
+6. **No External Dependencies** - Unlike Passport, no OAuth server needed
+7. **Stateless** - Server doesn't need to maintain session state (scalable)
+
+### Disadvantages / Limitations
+
+**Limitations:**
+1. **No Built-in OAuth2** - Unlike Passport, doesn't support third-party OAuth providers out of box
+2. **Token Storage** - Tokens are stored in database (personal_access_tokens table) - can grow large with many users
+3. **No Refresh Tokens** - Simple tokens don't have automatic refresh mechanism (must re-login when expired)
+4. **Database Dependency** - Each API request queries the database to validate token (slight performance overhead)
+5. **Manual Token Management** - Users must manually revoke tokens; no automatic cleanup of old tokens
+6. **Less Secure than OAuth2** - For high-security applications, OAuth2 with Passport is recommended
+
 ## Database Schema
 
-- **users** - Authentication
-- **personal_access_tokens** - Sanctum tokens
-- **events** - Event records
-- **participants** - Event participants (linked to events)
+- **users** - Authentication (11 users seeded)
+- **personal_access_tokens** - Sanctum tokens storage
+- **events** - Event records (100 events seeded)
+- **participants** - Event participants (1,000 participants seeded)
+
+**Total Records: 1,111** (exceeds 1,000 requirement)
